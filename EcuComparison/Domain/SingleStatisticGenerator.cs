@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ClosedXML.Excel;
 using EcuComparison.Constants;
 using EcuComparison.Models;
+using OfficeOpenXml;
+using OfficeOpenXml.Table;
 
 namespace EcuComparison.Domain
 {
 	public class SingleStatisticGenerator
 	{
-		private readonly XLWorkbook _workbook;
+		private readonly ExcelWorkbook _workbook;
 
 		private List<EcuModel> _sheetData;
 
@@ -18,7 +19,7 @@ namespace EcuComparison.Domain
 
 		private Dictionary<string, int> _startingNumberOfEcusPerDx;
 
-		public SingleStatisticGenerator(XLWorkbook workbook, List<EcuModel> sheetData)
+		public SingleStatisticGenerator(ExcelWorkbook workbook, List<EcuModel> sheetData)
 		{
 			_workbook = workbook;
 			_sheetData = sheetData;
@@ -27,7 +28,7 @@ namespace EcuComparison.Domain
 				.ToDictionary(k => k.Key, v => v.Count());
 		}
 
-		public SingleStatisticGenerator(XLWorkbook workbook)
+		public SingleStatisticGenerator(ExcelWorkbook workbook)
 		{
 			_workbook = workbook;
 			_sheetData = new List<EcuModel>();
@@ -55,7 +56,7 @@ namespace EcuComparison.Domain
 			Console.WriteLine($"Writing data for sheet: {statisticSheetName}");
 			
 			// Generate new sheet
-			IXLWorksheet newSheet = _workbook.AddWorksheet(statisticSheetName);
+			ExcelWorksheet newSheet = _workbook.Worksheets.Add(statisticSheetName);
 			
 			// Generate header
 			GenerateHeader(newSheet);
@@ -64,39 +65,51 @@ namespace EcuComparison.Domain
 			IEnumerable<AggregatedEcuModel> data = Calculate();
 			
 			// Write data to sheet
-			WriteDataToSheet(data, newSheet);
+			WriteDataToSheet(newSheet, data);
+			
+			// Apply table style
+			ApplyTableStyle(newSheet);
+			newSheet.Cells.AutoFitColumns();
 
 			return Task.CompletedTask;
 		}
 
-		private static void WriteDataToSheet(IEnumerable<AggregatedEcuModel> data, IXLWorksheet sheet)
+		private static void ApplyTableStyle(ExcelWorksheet sheet)
+		{
+			ExcelRange range = sheet.Cells[1, 1, sheet.Dimension.Rows, 6];
+			ExcelTable table = sheet.Tables.Add(range, "");
+			table.TableStyle = TableStyles.Medium6;
+		}
+
+		private static void WriteDataToSheet(ExcelWorksheet sheet, IEnumerable<AggregatedEcuModel> data)
 		{
 			int row = 2;
 
 			foreach (AggregatedEcuModel model in data)
 			{
-				sheet.Cell(row, 1).SetValue(model.Dx);
-				sheet.Cell(row, 2).SetValue(model.StartingNumber);
-				sheet.Cell(row, 3).SetValue(model.NumberOfVariance);
-				sheet.Cell(row, 4).SetValue(model.OverallVariance);
-				sheet.Cell(row, 5).SetValue(model.SwVariance);
-				sheet.Cell(row, 6).SetValue(model.HwVariance);
+				sheet.Cells[row, 1].Value = model.Dx;
+				sheet.Cells[row, 2].Value = model.StartingNumber;
+				sheet.Cells[row, 3].Value = model.NumberOfVariance;
+				sheet.Cells[row, 4].Value = model.OverallVariance;
+				sheet.Cells[row, 5].Value = model.SwVariance;
+				sheet.Cells[row, 6].Value = model.HwVariance;
 				row++;
 			}
 		}
 
-		private static void GenerateHeader(IXLWorksheet sheet)
+		private static void GenerateHeader(ExcelWorksheet sheet)
 		{
-			sheet.Cell(1, 1).SetValue("Dx");
-			sheet.Cell(1, 2).SetValue("Starting Number");
-			sheet.Cell(1, 3).SetValue("Number Of Variance");
-			sheet.Cell(1, 4).SetValue("Overall Variance");
-			sheet.Cell(1, 5).SetValue("SW Variance");
-			sheet.Cell(1, 6).SetValue("HW Variance");
+			sheet.Cells[1, 1].Value = "Dx";
+			sheet.Cells[1, 2].Value = "Starting Number";
+			sheet.Cells[1, 3].Value = "Number Of Variance";
+			sheet.Cells[1, 4].Value = "Overall Variance";
+			sheet.Cells[1, 5].Value = "SW Variance";
+			sheet.Cells[1, 6].Value = "HW Variance";
 		}
 		
 		private IEnumerable<AggregatedEcuModel> Calculate()
 		{
+			// Groups data by Dx and gets statistic
 			IEnumerable<AggregatedEcuModel> result = _sheetData
 				.GroupBy(v => new
 				{
@@ -125,7 +138,7 @@ namespace EcuComparison.Domain
 
 		private static string CheckSoftwareVariance(IReadOnlyList<EcuModel> model)
 		{
-			string sw = model.First().Sw;
+			string sw = model[0].Sw;
 
 			for (int i = 1; i < model.Count; i++)
 			{
@@ -140,7 +153,7 @@ namespace EcuComparison.Domain
 
 		private static string CheckHardwareVariance(IReadOnlyList<EcuModel> model)
 		{
-			string hw = model.First().Hw;
+			string hw = model[0].Hw;
 
 			for (int i = 1; i < model.Count; i++)
 			{

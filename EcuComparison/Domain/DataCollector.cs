@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using ClosedXML.Excel;
 using EcuComparison.Models;
+using OfficeOpenXml;
 
 namespace EcuComparison.Domain
 {
 	public class DataCollector
 	{
-		private readonly XLWorkbook _workbook;
+		private readonly ExcelWorkbook _workbook;
 
-		private readonly string[] _sheetNames = { "te.VBV_AERO B EU" };
-		// private readonly string[] _sheetNames = { "te.VBV_AERO B EU", "te.VBV_ID.4 EU", "te.VBV_ID.Buzz EU", "te.VBV_ID.4 NAR", "te.VBV_AERO B CN" };
+		// private readonly string[] _sheetNames = { "te.VBV_AERO B EU" };
+		private readonly string[] _sheetNames = { "te.VBV_AERO B EU", "te.VBV_ID.4 EU", "te.VBV_ID.Buzz EU", "te.VBV_ID.4 NAR", "te.VBV_AERO B CN" };
 
-		public DataCollector(XLWorkbook workbook)
+		public DataCollector(ExcelWorkbook workbook)
 		{
 			_workbook = workbook;
 		}
@@ -25,11 +24,24 @@ namespace EcuComparison.Domain
 			foreach (string sheetName in _sheetNames)
 			{
 				Console.WriteLine($"Collecting data for sheet: {sheetName}");
+				ExcelWorksheet sheet = _workbook.Worksheets[sheetName];
 
-				if (_workbook.TryGetWorksheet(sheetName, out IXLWorksheet sheet))
+				if (sheet is not null)
 				{
-					IXLRows rows = sheet.RowsUsed();
-					result.Add(rows.Skip(1).Select(row => MapRowToModel(row, sheetName)).ToList());
+					List<EcuModel> rows = new List<EcuModel>();
+					int totalRows = sheet.Dimension.Rows;
+
+					for (int i = 2; i <= totalRows; i++)
+					{
+						EcuModel mappedRow = MapRowToModel(sheet, i);
+
+						if (!string.IsNullOrEmpty(mappedRow.Dx))
+						{
+							rows.Add(mappedRow);
+						}
+					}
+					
+					result.Add(rows);
 				}
 				else
 				{
@@ -40,22 +52,20 @@ namespace EcuComparison.Domain
 			return result;
 		}
 
-		private static EcuModel MapRowToModel(IXLRow row, string sheetName)
+		private static EcuModel MapRowToModel(ExcelWorksheet sheet, int rowIndex)
 		{
-			List<IXLCell> cells = row.Cells().ToList();
-
 			EcuModel model = new EcuModel()
 			{
-				SheetName = sheetName,
-				Project = cells[0].GetString(),
-				Region = cells[1].GetString(),
-				Dx = cells[2].GetString(),
-				Grundsteurgerat = cells[3].GetString(),
-				SgTnrHwTnr = cells[4].GetString(),
-				Comment = cells[5].GetString(),
-				Sw = cells[6].GetString(),
-				Hw = cells[7].GetString(),
-				SwTermin = cells[8].GetString()
+				SheetName = sheet.Name,
+				Project = sheet.Cells[rowIndex, 1].Text,
+				Region = sheet.Cells[rowIndex, 2].Text,
+				Dx = sheet.Cells[rowIndex, 3].Text,
+				Grundsteurgerat = sheet.Cells[rowIndex, 4].Text,
+				SgTnrHwTnr = sheet.Cells[rowIndex, 5].Text,
+				Comment = sheet.Cells[rowIndex, 6].Text,
+				Sw = sheet.Cells[rowIndex, 7].Text,
+				Hw = sheet.Cells[rowIndex, 8].Text,
+				SwTermin = sheet.Cells[rowIndex, 9].Text
 			};
 
 			return model;

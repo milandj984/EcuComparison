@@ -2,23 +2,23 @@
 {
 	public class EcuModel
 	{
-		public string SheetName { get; set; }
-		public string Project { get; set; }
+		public string SheetName { get; init; }
+		public string Project { get; init; }
 		
-		public string Region { get; set; }
+		public string Region { get; init; }
 		
-		public string Dx { get; set; }
+		public string Dx { get; init; }
 		
-		public string Grundsteurgerat { get; set; }
+		public string Grundsteurgerat { get; init; }
 		
-		public string SgTnrHwTnr { get; set; }
+		public string SgTnrHwTnr { get; init; }
 		
-		public string Comment { get; set; }
+		public string Comment { get; init; }
 		
-		public string Sw { get; set; }
+		public string Sw { get; init; }
 		
-		public string Hw { get; set; }
+		public string Hw { get; init; }
 		
-		public string SwTermin { get; set; }
+		public string SwTermin { get; init; }
 	}
 }
