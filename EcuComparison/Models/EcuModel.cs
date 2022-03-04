@@ -2,6 +2,7 @@
 {
 	public class EcuModel
 	{
+		public string SheetName { get; set; }
 		public string Project { get; set; }
 		
 		public string Region { get; set; }
