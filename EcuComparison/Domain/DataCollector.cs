@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using EcuComparison.Constants;
 using EcuComparison.Models;
 using OfficeOpenXml;
 
@@ -9,8 +10,7 @@ namespace EcuComparison.Domain
 	{
 		private readonly ExcelWorkbook _workbook;
 
-		// private readonly string[] _sheetNames = { "te.VBV_AERO B EU" };
-		private readonly string[] _sheetNames = { "te.VBV_AERO B EU", "te.VBV_ID.4 EU", "te.VBV_ID.Buzz EU", "te.VBV_ID.4 NAR", "te.VBV_AERO B CN" };
+		private readonly string[] _sheetNames = { Sheets.AeroBEu, Sheets.Id4Eu, Sheets.IdBuzzEu, Sheets.Id4Nar, Sheets.AeroBCn };
 
 		public DataCollector(ExcelWorkbook workbook)
 		{

@@ -51,7 +51,7 @@ namespace EcuComparison.Domain
 		{
 			if (_sheetData.Count <= 0) return Task.CompletedTask;
 			
-			string sheetName = _sheetData.First().SheetName;
+			string sheetName = _sheetData[0].SheetName;
 			string statisticSheetName = sheetName + Prefix;
 			Console.WriteLine($"Writing data for sheet: {statisticSheetName}");
 			
@@ -74,9 +74,9 @@ namespace EcuComparison.Domain
 			return Task.CompletedTask;
 		}
 
-		private static void ApplyTableStyle(ExcelWorksheet sheet)
+		public static void ApplyTableStyle(ExcelWorksheet sheet)
 		{
-			ExcelRange range = sheet.Cells[1, 1, sheet.Dimension.Rows, 6];
+			ExcelRange range = sheet.Cells[1, 1, sheet.Dimension.Rows, sheet.Dimension.Columns];
 			ExcelTable table = sheet.Tables.Add(range, "");
 			table.TableStyle = TableStyles.Medium6;
 		}
@@ -136,7 +136,7 @@ namespace EcuComparison.Domain
 			return result;
 		}
 
-		private static string CheckSoftwareVariance(IReadOnlyList<EcuModel> model)
+		public static string CheckSoftwareVariance(IReadOnlyList<EcuModel> model)
 		{
 			string sw = model[0].Sw;
 
@@ -151,7 +151,7 @@ namespace EcuComparison.Domain
 			return Variance.CopSw;
 		}
 
-		private static string CheckHardwareVariance(IReadOnlyList<EcuModel> model)
+		public static string CheckHardwareVariance(IReadOnlyList<EcuModel> model)
 		{
 			string hw = model[0].Hw;
 
